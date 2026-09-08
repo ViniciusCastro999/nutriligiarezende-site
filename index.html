@@ -354,6 +354,10 @@
     .reveal{opacity:1;transform:none;}
   }
 </style>
+
+<!-- GoatCounter analytics -->
+<script data-goatcounter="https://nutriligiarezende.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
 
@@ -776,6 +780,7 @@
       var goal = (form.querySelector('input[name=goal]:checked')||{}).value || '';
       var msg = 'Olá Lígia! Sou ' + name + '. Tenho interesse em atendimento ' + fmt +
                 ' e meu objetivo é ' + goal + '. Podemos conversar sobre agendar uma consulta?';
+      if (window.gcCount) window.gcCount('formulario/enviado/' + fmt, 'Formulário enviado no WhatsApp — ' + fmt);
       window.open(WA + encodeURIComponent(msg), '_blank', 'noopener');
     });
     document.getElementById('fName').addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); next.click(); } });
@@ -783,6 +788,48 @@
   })();
 
   document.getElementById('year').textContent = new Date().getFullYear();
+
+  // ---- rastreamento de cliques (GoatCounter) ----
+  (function(){
+    function gcCount(path, title){
+      if (window.goatcounter && window.goatcounter.count) {
+        window.goatcounter.count({ path: path, title: title, event: true });
+      }
+    }
+    // expõe para o form multi-step
+    window.gcCount = gcCount;
+
+    function localDoClique(el){
+      var sec = el.closest('section[id]');
+      if (el.closest('.nav-outer')) return 'menu';
+      if (el.closest('.fab')) return 'botao-flutuante';
+      if (el.closest('footer')) return 'rodape';
+      if (sec && sec.id) return sec.id;
+      if (el.closest('.hero')) return 'hero';
+      return 'pagina';
+    }
+
+    function rotuloDestino(a){
+      var href = a.getAttribute('href') || '';
+      if (/5535984220874/.test(href)) return { path: 'whatsapp-dev', title: 'WhatsApp do desenvolvedor' };
+      if (/wa\.me|whatsapp\.com/.test(href)) return { path: 'whatsapp', title: 'Clique no WhatsApp' };
+      if (/instagram\.com/.test(href)) return { path: 'instagram', title: 'Clique no Instagram' };
+      if (/^mailto:/.test(href)) return { path: 'email', title: 'Clique no e-mail' };
+      if (/google\.[^/]+\/maps/.test(href)) return { path: 'mapa', title: 'Clique no endereço/mapa' };
+      if (/^#/.test(href) && href.length > 1) return { path: 'nav-' + href.slice(1), title: 'Navegação interna' };
+      return null;
+    }
+
+    document.addEventListener('click', function(e){
+      var a = e.target.closest('a[href]');
+      if (!a) return;
+      var dest = rotuloDestino(a);
+      if (!dest) return;
+      var texto = (a.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 40);
+      var loc = localDoClique(a);
+      gcCount(dest.path + '/' + loc + (texto ? '/' + texto : ''), dest.title + ' — ' + loc);
+    }, true);
+  })();
 </script>
 </body>
 </html>
